@@ -140,15 +140,11 @@ def get_count(
 ) -> int:
     from frappe.desk.reportview import execute
 
-    distinct = "distinct " if distinct else ""
-    fieldname = f"{distinct}`tab{doctype}`.name"
-
-    fieldname = [f"count({fieldname}) as total_count"]
     count = execute(
         doctype,
         distinct=distinct,
         limit=limit,
-        fields=fieldname,
+        fields=[{"COUNT": "*", "as": "total_count"}],
         filters=filters,
         or_filters=or_filters,
         ignore_permissions=ignore_permissions,
