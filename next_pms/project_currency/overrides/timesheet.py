@@ -133,10 +133,11 @@ class TimesheetOverwrite(Timesheet):
         )
 
         if len(employee_promotion) == 0:
-            employee = frappe.get_doc(
+            employee = frappe.db.get_value(
                 "Employee",
                 self.employee,
                 ["ctc", "salary_currency"],
+                as_dict=True,
             )
             employee_salary = employee.ctc
             employee_currency = employee.salary_currency
