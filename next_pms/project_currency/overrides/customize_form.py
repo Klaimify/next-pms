@@ -9,7 +9,7 @@ class CustomizeFormOverride(CustomizeForm):
         CustomizeForm (class): Default class
     """
 
-    def allow_property_change(self, prop, meta_df, df):
+    def allow_property_change(self, prop, meta_df, df, meta):
         """
         Check if a given property can be exported or not
 
@@ -30,4 +30,4 @@ class CustomizeFormOverride(CustomizeForm):
 
         if prop == "options":
             return True
-        return super().allow_property_change(prop, meta_df, df)
+        return super().allow_property_change(prop, meta_df, df, meta)
