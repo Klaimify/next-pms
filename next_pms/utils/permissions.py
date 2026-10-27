@@ -18,3 +18,11 @@ def has_owner_gated_permission(doc_owner: str | None, ptype: str, user: str) -> 
     if OWNER_GATED_ROLES.intersection(roles):
         return (doc_owner or "").lower() == user.lower()
     return True
+
+
+FINANCIAL_PERMLEVEL = 2
+
+
+def can_view_financials(user: str | None = None) -> bool:
+    """Whether the user holds a read permission on the financial permlevel of Project."""
+    return FINANCIAL_PERMLEVEL in frappe.get_meta("Project").get_permlevel_access("read", user=user)

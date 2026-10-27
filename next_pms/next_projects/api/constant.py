@@ -7,6 +7,9 @@ ALLOWED_ROLES = [
     "System Manager",
 ]
 
+# Roles that may open the project pages without being able to read financial data
+NON_FINANCIAL_ROLES = ["Project Task User"]
+
 # Task.status values counted in get_project_tracking task totals (excludes Template, Cancelled)
 TASK_TRACKING_TOTAL_STATUSES = (
     "Open",
