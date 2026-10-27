@@ -60,6 +60,7 @@ export interface DocMetaProps {
 export type Role =
   | "Projects Manager"
   | "Projects User"
+  | "Project Task User"
   | "Delivery Manager"
   | "Delivery User"
   | "Employee"

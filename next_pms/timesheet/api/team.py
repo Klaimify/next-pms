@@ -11,7 +11,6 @@ from frappe import (
     get_doc,
     get_value,
     log_error,
-    only_for,
     sendmail,
     session,
     throw,
@@ -30,7 +29,6 @@ from next_pms.timesheet.utils.constant import (
     MAX_TEAM_TIMESHEET_PAGE_LENGTH,
     NOT_SUBMITTED_STATUS,
     TEAM_TIMESHEET_PAGE_LENGTH,
-    TIMESHEET_REVIEWER_ROLES,
 )
 
 from . import filter_employees
@@ -43,6 +41,8 @@ from .utils import (
     employee_has_higher_access,
     get_week_dates,
     has_scoped_timesheets_before,
+    is_direct_report_reviewer,
+    only_for_team_reviewers,
     resolve_team_employee_scope,
     resolve_team_members,
     update_weekly_status_of_timesheet,
@@ -98,7 +98,7 @@ def get_team_timesheet_data(
     counts. Both derive membership from `resolve_team_members`, so this endpoint's
     `total_count` and that endpoint's `member_count` cannot drift.
     """
-    only_for(TIMESHEET_REVIEWER_ROLES, message=True)
+    only_for_team_reviewers()
 
     start = int(start)
     page_length = max(0, min(int(page_length), MAX_TEAM_TIMESHEET_PAGE_LENGTH))
@@ -169,7 +169,7 @@ def get_team_timesheet_weeks(
     a Task or Timesheet Detail filter does reach the detail rows, since qualifying a week
     against it cannot be answered from the Timesheet table alone.
     """
-    only_for(TIMESHEET_REVIEWER_ROLES, message=True)
+    only_for_team_reviewers()
 
     max_week = int(max_week)
     scope = resolve_team_employee_scope(
@@ -230,7 +230,7 @@ def get_team_timesheet_member_week(employee: str, start_date: str, by_pass_acces
     update replaces a single row instead of forcing a reload of the whole week.
     """
     if not by_pass_access_check:
-        only_for(TIMESHEET_REVIEWER_ROLES, message=True)
+        only_for_team_reviewers()
 
     week = get_week_dates(date=start_date)
     employee_rows, _ = filter_employees(page_length=1, start=0, ids=[employee], ignore_default_filters=True)
@@ -253,11 +253,14 @@ def approve_or_reject_timesheet(
     employee, day and project, so the subset is a plain filter on `parent_project` rather
     than a partial write to a shared document.
     """
-    only_for(TIMESHEET_REVIEWER_ROLES, message=True)
+    only_for_team_reviewers()
 
     # No role approves its own week - a reviewer role is permission to review someone else.
     if employee == get_employee_from_user():
         return throw(_("You cannot approve or reject your own timesheets."))
+
+    if is_direct_report_reviewer() and db.get_value("Employee", employee, "reports_to") != get_employee_from_user():
+        return throw(_("You can only approve or reject timesheets of your direct reports."), exc=PermissionError)
 
     if not dates:
         return throw(_("Please select the dates to approve or reject the timesheet."))

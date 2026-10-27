@@ -27,6 +27,7 @@ def after_install():
     setup_project_permissions_for_managers()
     setup_time_report_frequency()
     setup_custom_docperms()
+    grant_project_task_user_allocation_access()
     restrict_project_cost_fields()
 
 
@@ -362,6 +363,25 @@ PROJECT_COST_FIELDS = (
 )
 
 
+def grant_project_task_user_allocation_access() -> None:
+    """Let Project Task User manage allocations: write on Project (an allocation is saved against
+    its project) and full access to Resource Allocation, both at permlevel 0 only."""
+    import frappe
+    from frappe.permissions import add_permission, update_permission_property
+
+    if not frappe.db.exists("Role", "Project Task User"):
+        return
+
+    for doctype, ptypes in (
+        ("Project", ("select", "read", "write")),
+        ("Resource Allocation", ("select", "read", "write", "create", "delete")),
+    ):
+        if not frappe.db.exists("Custom DocPerm", {"parent": doctype, "role": "Project Task User", "permlevel": 0}):
+            add_permission(doctype, "Project Task User", 0)
+        for ptype in ptypes:
+            update_permission_property(doctype, "Project Task User", 0, ptype, 1)
+
+
 def restrict_project_cost_fields() -> None:
     """Move the standard Project costing and billing fields to the financial permlevel (2), so
     roles without read access to it cannot see them on the form or through the REST API."""
@@ -399,7 +419,8 @@ CUSTOM_DOCPERMS: tuple[tuple[str, str, int, int, tuple[str, ...]], ...] = (
     ("Project", "Timesheet User", 0, 0, ("read",)),
     ("Project", "Timesheet User", 1, 0, ("read", "export")),
     ("Project", "Timesheet User", 2, 0, ("read", "export")),
-    ("Project", "Project Task User", 0, 0, ("select", "read")),
+    ("Project", "Project Task User", 0, 0, ("select", "read", "write")),
+    ("Resource Allocation", "Project Task User", 0, 0, ("select", "read", "write", "create", "delete")),
     ("Task", "Employee", 0, 0, ("read", "write", "create")),
     ("Task", "Project Task User", 0, 0, ("select", "read", "write", "create")),
     (

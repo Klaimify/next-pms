@@ -31,6 +31,7 @@ from next_pms.resource_management.api.utils.query import (
     has_active_allocation_filter,
 )
 from next_pms.timesheet.api.employee import apply_working_hours_fallback
+from next_pms.utils.permissions import can_view_financials
 
 
 @frappe.whitelist(methods=["GET", "POST"])
@@ -287,7 +288,7 @@ def _get_resource_management_project_view_data(
 
     resource_allocation_map = {}
     user_info_cache = {}
-    privileged_emp_fields = ["ctc", "salary_currency"] if permissions["write"] else []
+    privileged_emp_fields = ["ctc", "salary_currency"] if permissions["write"] and can_view_financials() else []
     emp_fields = [
         "employee_name",
         "name",
@@ -515,7 +516,7 @@ def _get_employees_resrouce_data_for_given_project(
     start_date = getdate(start_date)
     end_date = getdate(end_date)
 
-    privileged_emp_fields = ["ctc", "salary_currency"] if permissions["write"] else []
+    privileged_emp_fields = ["ctc", "salary_currency"] if permissions["write"] and can_view_financials() else []
     emp_fields = [
         "employee_name",
         "name",

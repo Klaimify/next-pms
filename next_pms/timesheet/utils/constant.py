@@ -17,6 +17,10 @@ GLOBAL_TIMESHEET_ROLES = ["Timesheet Manager", "Timesheet User", "Delivery Manag
 # Roles that open the Team and Project timesheet pages.
 TIMESHEET_REVIEWER_ROLES = [*GLOBAL_TIMESHEET_ROLES, "Projects Manager"]
 
+# Roles that open the Team timesheet page for their own direct reports only.
+DIRECT_REPORT_REVIEWER_ROLES = ["Project Task User"]
+TEAM_TIMESHEET_REVIEWER_ROLES = [*TIMESHEET_REVIEWER_ROLES, *DIRECT_REPORT_REVIEWER_ROLES]
+
 # The one approval status that is an absence of data rather than a stored value: a week
 # with no Timesheet, or a Timesheet whose weekly status was never set.
 NOT_SUBMITTED_STATUS = "Not Submitted"

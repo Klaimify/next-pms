@@ -45,9 +45,19 @@ export const ROLE_ACCESS = {
     "Delivery Manager",
     "System Manager",
   ],
+  /** Reviews only their own direct reports on the Team timesheet page. */
+  reviewTeamTimesheets: [
+    "Timesheet Manager",
+    "Timesheet User",
+    "Projects Manager",
+    "Project Task User",
+    "Delivery Manager",
+    "System Manager",
+  ],
   manageAllocations: [
     "Projects Manager",
     "Projects User",
+    "Project Task User",
     "Delivery Manager",
     "System Manager",
   ],

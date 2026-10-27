@@ -12,9 +12,12 @@ from next_pms.resource_management.api.utils.query import get_employee_leaves
 from next_pms.timesheet.utils.constant import (
     ALLOWED_FILTER_FIELDS,
     ALLOWED_TIMESHET_DETAIL_FIELDS,
+    DIRECT_REPORT_REVIEWER_ROLES,
     FILTER_LOOKBACK_WEEKS,
     GLOBAL_TIMESHEET_ROLES,
     NOT_SUBMITTED_STATUS,
+    TEAM_TIMESHEET_REVIEWER_ROLES,
+    TIMESHEET_REVIEWER_ROLES,
     WORK_FILTER_DOCTYPES,
 )
 
@@ -273,6 +276,20 @@ def apply_role_permission_for_doctype(roles: list[str], doctype: str, ptype: str
         frappe.has_permission(doctype, ptype, doc, throw=True)
 
 
+def is_direct_report_reviewer() -> bool:
+    """Whether the session user reviews timesheets for their direct reports only."""
+    if frappe.session.user == "Administrator":
+        return False
+    roles = set(frappe.get_roles())
+    return bool(roles & set(DIRECT_REPORT_REVIEWER_ROLES)) and not roles & set(TIMESHEET_REVIEWER_ROLES)
+
+
+def only_for_team_reviewers():
+    """Gate a Team timesheet endpoint, and limit a direct report reviewer to their own reports."""
+    frappe.only_for(TEAM_TIMESHEET_REVIEWER_ROLES, message=True)
+    frappe.flags.team_review_scoped = is_direct_report_reviewer()
+
+
 def employee_has_higher_access(employee: str, ptype: str = "read") -> bool:
     """Whether the session user may `ptype` the timesheets of `employee` (the target
     record, never the caller's own: that would return True for everyone)."""
@@ -299,6 +316,9 @@ def employee_has_higher_access(employee: str, ptype: str = "read") -> bool:
         return True
     if set(roles).intersection(READ_WRITE_ROLE) and ptype == "write":
         return True
+    if is_direct_report_reviewer() and session_employee:
+        reports_to = frappe.db.get_value("Employee", employee, "reports_to")
+        return employee == session_employee or reports_to == session_employee
 
     return employee == session_employee
 

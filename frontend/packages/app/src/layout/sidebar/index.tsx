@@ -141,9 +141,11 @@ const Sidebar = () => {
 
   const timesheetItems: SidebarSectionType["items"] = [personalTimesheet];
 
-  if (hasAnyRole(roles, ROLE_ACCESS.reviewTimesheets)) {
+  if (hasAnyRole(roles, ROLE_ACCESS.reviewTeamTimesheets)) {
     timesheetItems[0].label = "Personal";
     timesheetItems.push(teamTimesheet);
+  }
+  if (hasAnyRole(roles, ROLE_ACCESS.reviewTimesheets)) {
     timesheetItems.push(projectTimesheet);
   }
 
@@ -247,7 +249,7 @@ const Sidebar = () => {
     });
   }
 
-  if (hasAnyRole(roles, ROLE_ACCESS.reviewTimesheets)) {
+  if (hasAnyRole(roles, ROLE_ACCESS.reviewTeamTimesheets)) {
     searchItems.push({
       label: "Timesheet - Team",
       action: () =>
@@ -257,6 +259,9 @@ const Sidebar = () => {
             : ROUTES["timesheet-team"],
         ),
     });
+  }
+
+  if (hasAnyRole(roles, ROLE_ACCESS.reviewTimesheets)) {
     searchItems.push({
       label: "Timesheet - Projects",
       action: () => navigate(ROUTES["timesheet-project"]),
