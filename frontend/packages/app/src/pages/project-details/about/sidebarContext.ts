@@ -55,7 +55,6 @@ export const DEFAULT_SIDEBAR: ProjectSidebar = {
     github: null,
     opportunity: null,
   },
-  burn: { total_budget: 0, cost_accrued: 0, cost_forecasted: 0 },
   progress: { actual_time: 0, total_hours_purchased: 0 },
   members: [],
   customers: [],

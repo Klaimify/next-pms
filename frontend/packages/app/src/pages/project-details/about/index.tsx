@@ -48,13 +48,10 @@ function AboutThisProjectContent({ className }: { className: string }) {
   const sidebar = useSidebar((state) => state.sidebar);
   const risk = useSidebar((state) => state.risk);
 
-  const costAccrued = currencyFormat(currency).format(
-    sidebar.burn.cost_accrued,
-  );
-  const hasBudget = sidebar.burn.total_budget > 0;
-  const totalBudget = currencyFormat(currency).format(
-    sidebar.burn.total_budget,
-  );
+  const burn = sidebar.burn;
+  const costAccrued = currencyFormat(currency).format(burn?.cost_accrued ?? 0);
+  const hasBudget = (burn?.total_budget ?? 0) > 0;
+  const totalBudget = currencyFormat(currency).format(burn?.total_budget ?? 0);
   const budgetNotSetHint =
     billingType && billingType !== "Non-Billable"
       ? "No submitted Sales Order is linked to this project"
@@ -154,43 +151,45 @@ function AboutThisProjectContent({ className }: { className: string }) {
 
         <LinkSection />
 
-        <Section
-          value="budget"
-          title="Budget burn"
-          suffix={<InfoHoverCard help={PROJECT_ABOUT_HELP.budget} />}
-        >
-          <div className="flex flex-col gap-2.5">
-            <div className="flex items-center justify-between">
-              <Tooltip text={costAccrued} showWhen="truncated">
-                <span className="text-base font-medium text-ink-gray-7 truncate">
-                  {costAccrued}
-                </span>
-              </Tooltip>
-              {hasBudget ? (
-                <Tooltip text={totalBudget} showWhen="truncated">
-                  <span className="text-base text-ink-gray-5 truncate">
-                    {totalBudget}
+        {burn && (
+          <Section
+            value="budget"
+            title="Budget burn"
+            suffix={<InfoHoverCard help={PROJECT_ABOUT_HELP.budget} />}
+          >
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                <Tooltip text={costAccrued} showWhen="truncated">
+                  <span className="text-base font-medium text-ink-gray-7 truncate">
+                    {costAccrued}
                   </span>
                 </Tooltip>
-              ) : (
-                <Tooltip text={budgetNotSetHint}>
-                  <span className="text-base text-ink-gray-5 truncate">
-                    Budget not set
-                  </span>
-                </Tooltip>
-              )}
+                {hasBudget ? (
+                  <Tooltip text={totalBudget} showWhen="truncated">
+                    <span className="text-base text-ink-gray-5 truncate">
+                      {totalBudget}
+                    </span>
+                  </Tooltip>
+                ) : (
+                  <Tooltip text={budgetNotSetHint}>
+                    <span className="text-base text-ink-gray-5 truncate">
+                      Budget not set
+                    </span>
+                  </Tooltip>
+                )}
+              </div>
+              <BudgetBurnBar
+                value={burn.cost_accrued}
+                primaryTooltip="Cost Accrued"
+                secondaryValue={burn.cost_forecasted}
+                secondaryTooltip="Cost Forcasted"
+                markerValue={burn.target_cost}
+                markerTooltip="Target Cost"
+                maxValue={burn.total_budget}
+              />
             </div>
-            <BudgetBurnBar
-              value={sidebar.burn.cost_accrued}
-              primaryTooltip="Cost Accrued"
-              secondaryValue={sidebar.burn.cost_forecasted}
-              secondaryTooltip="Cost Forcasted"
-              markerValue={sidebar.burn.target_cost}
-              markerTooltip="Target Cost"
-              maxValue={sidebar.burn.total_budget}
-            />
-          </div>
-        </Section>
+          </Section>
+        )}
 
         <ProgressHoursSection
           progress={{

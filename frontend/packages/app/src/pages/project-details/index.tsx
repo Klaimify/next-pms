@@ -9,6 +9,7 @@ import { Tabs } from "@rtcamp/frappe-ui-react";
  * Internal dependencies.
  */
 import { ROUTES } from "@/lib/constant";
+import { useUser } from "@/providers/user";
 import { AboutThisProject } from "./about";
 import { TAB_PARAM } from "./constants";
 import { useProjectDetail } from "./context";
@@ -42,6 +43,7 @@ function ProjectDetailBody() {
     (state) => state.project?.custom_enable_project_report_generation,
   );
   const editorMatch = useMatch(`${ROUTES.project}/:projectId/notes/*`);
+  const canViewFinancials = useUser((s) => s.state.canViewFinancials);
 
   let finalTabs = TABS;
   let finalTabKeys = [...TAB_KEYS];
@@ -52,6 +54,10 @@ function ProjectDetailBody() {
   if (!window.frappe?.boot?.show_rag_trigger_page) {
     finalTabs = finalTabs.filter((tab) => tab.label !== "RAG stats");
     finalTabKeys = finalTabKeys.filter((key) => key !== "rag-stats");
+  }
+  if (!canViewFinancials) {
+    finalTabs = finalTabs.filter((tab) => tab.label !== "Tracking");
+    finalTabKeys = finalTabKeys.filter((key) => key !== "tracking");
   }
   if (!reportEnabled) {
     finalTabs = finalTabs.filter((tab) => tab.label !== "Reports");

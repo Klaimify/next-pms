@@ -123,6 +123,17 @@ export const PROJECT_LIST_COLUMNS: ProjectListColumn[] = [
 ];
 
 /**
+ * Columns that show project financial data, hidden from users who cannot read it.
+ */
+export const FINANCIAL_COLUMN_KEYS: ReadonlySet<string> = new Set([
+  "burn_rate_per_week",
+  "cost_burn_percent",
+  "total_budget",
+  "profit_margin",
+  "lifetime_value_to_date",
+]);
+
+/**
  * Configuration for the column drag sensors used in the project list.
  */
 export const COLUMN_DRAG_SENSORS = [

@@ -107,7 +107,7 @@ export function SidebarProvider({ projectId, children }: SidebarProviderProps) {
 
   const billingTeam = useMemo<BillingTeamMember[]>(
     () =>
-      sidebar.billing_team.map((m) => ({
+      (sidebar.billing_team ?? []).map((m) => ({
         name: m.name,
         employeeId: m.employee_id,
         userId: m.user_id,

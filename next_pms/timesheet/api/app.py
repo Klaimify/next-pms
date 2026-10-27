@@ -2,6 +2,8 @@ import frappe
 from frappe import _dict, get_all, whitelist
 from frappe.utils.caching import redis_cache
 
+from next_pms.utils.permissions import can_view_financials
+
 
 @frappe.whitelist(methods=["GET"])
 def has_bu_field():
@@ -21,13 +23,14 @@ def has_industry_field():
 
 @whitelist(methods=["GET"])
 def get_data():
-    """returns roles.currencies, has_business_unit, has_industry  data for the current user or passed in user"""
+    """returns roles, currencies, has_business_unit, has_industry and can_view_financials data for the current user"""
     return {
         "roles": get_current_user_roles(),
         "currencies": get_currencies(),
         "has_business_unit": has_bu_field(),
         "has_industry": has_industry_field(),
         "backdate_restricted_before": get_own_backdate_restriction_boundary(),
+        "can_view_financials": can_view_financials(),
     }
 
 

@@ -29,6 +29,7 @@ import { PHASE_OPTIONS, RAG_OPTIONS, STATUS_OPTIONS } from "../../constants";
 import { CURRENCY_HELP, CURRENCY_SORT_TOOLTIP } from "../../help";
 import {
   MAX_PINNED_COLUMNS,
+  FINANCIAL_COLUMN_KEYS,
   PROJECT_LIST_COLUMNS,
 } from "../../list/columns/constants";
 import { useColumnLayout } from "../../list/columns/useColumnLayout";
@@ -36,6 +37,11 @@ import { Phase, type ProjectStatus, type RagStatus } from "../../types";
 import { useProjectViews } from "../../views";
 
 const AVAILABLE_COLUMNS = toSelectorColumns(PROJECT_LIST_COLUMNS);
+const NON_FINANCIAL_COLUMNS = toSelectorColumns(
+  PROJECT_LIST_COLUMNS.filter(
+    (column) => !FINANCIAL_COLUMN_KEYS.has(column.key),
+  ),
+);
 
 export function ProjectFilters() {
   const {
@@ -51,6 +57,7 @@ export function ProjectFilters() {
     setCurrency,
   } = useProjectFilters();
   const currencies = useUser((s) => s.state.currencies);
+  const canViewFinancials = useUser((s) => s.state.canViewFinancials);
 
   const didInitCurrency = useRef(false);
   useEffect(() => {
@@ -193,7 +200,9 @@ export function ProjectFilters() {
         {!isKanban && (
           <ColumnSelector
             columns={selectedColumns}
-            availableColumns={AVAILABLE_COLUMNS}
+            availableColumns={
+              canViewFinancials ? AVAILABLE_COLUMNS : NON_FINANCIAL_COLUMNS
+            }
             pinnable
             maxPinned={MAX_PINNED_COLUMNS}
             labels={{
@@ -215,20 +224,28 @@ export function ProjectFilters() {
             fields={[
               { field: "project_name", label: "Project name" },
               { field: "custom_project_phase", label: "Phase" },
-              {
-                field: "burn_rate_per_week",
-                label: "Burn rate/week",
-                disabled: !currency,
-                tooltipText: !currency ? CURRENCY_SORT_TOOLTIP : undefined,
-              },
-              { field: "cost_burn_percent", label: "Cost burn" },
-              {
-                field: "total_budget",
-                label: "Total budget",
-                disabled: !currency,
-                tooltipText: !currency ? CURRENCY_SORT_TOOLTIP : undefined,
-              },
-              { field: "profit_margin", label: "Profit margin" },
+              ...(canViewFinancials
+                ? [
+                    {
+                      field: "burn_rate_per_week",
+                      label: "Burn rate/week",
+                      disabled: !currency,
+                      tooltipText: !currency
+                        ? CURRENCY_SORT_TOOLTIP
+                        : undefined,
+                    },
+                    { field: "cost_burn_percent", label: "Cost burn" },
+                    {
+                      field: "total_budget",
+                      label: "Total budget",
+                      disabled: !currency,
+                      tooltipText: !currency
+                        ? CURRENCY_SORT_TOOLTIP
+                        : undefined,
+                    },
+                    { field: "profit_margin", label: "Profit margin" },
+                  ]
+                : []),
               { field: "expected_start_date", label: "Start date" },
               { field: "custom_next_milestone", label: "Next milestone" },
               { field: "expected_end_date", label: "End date" },
@@ -301,21 +318,28 @@ export function ProjectFilters() {
                 { label: "Not Equals", value: "!=" },
               ],
             },
-            {
-              name: "custom_billing_type",
-              label: "Billing type",
-              type: "select",
-              operators: [
-                { label: "Equals", value: "=" },
-                { label: "Not Equals", value: "!=" },
-              ],
-              options: [
-                { label: "Non-Billable", value: "Non-Billable" },
-                { label: "Fixed Cost", value: "Fixed Cost" },
-                { label: "Retainer", value: "Retainer" },
-                { label: "Time and Material", value: "Time and Material" },
-              ],
-            },
+            ...(canViewFinancials
+              ? [
+                  {
+                    name: "custom_billing_type",
+                    label: "Billing type",
+                    type: "select" as const,
+                    operators: [
+                      { label: "Equals", value: "=" },
+                      { label: "Not Equals", value: "!=" },
+                    ],
+                    options: [
+                      { label: "Non-Billable", value: "Non-Billable" },
+                      { label: "Fixed Cost", value: "Fixed Cost" },
+                      { label: "Retainer", value: "Retainer" },
+                      {
+                        label: "Time and Material",
+                        value: "Time and Material",
+                      },
+                    ],
+                  },
+                ]
+              : []),
             {
               name: "custom_industry",
               label: "Industry",

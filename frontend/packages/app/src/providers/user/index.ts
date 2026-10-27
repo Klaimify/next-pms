@@ -55,6 +55,9 @@ export interface UserContextProps {
     hasReleaseNotes: boolean;
     /** Whether a release exists that the user hasn't opened What's new for. */
     hasUnseenRelease: boolean;
+    /** Whether the user can read project financial data (costs, budgets, rates).
+     * `false` until the app data has loaded. */
+    canViewFinancials: boolean;
   };
   actions: {
     /** Logs out the current user and clears the active session. */
@@ -88,6 +91,7 @@ export const UserContext = createContext<UserContextProps>({
     backdateRestrictedBefore: null,
     hasReleaseNotes: window.frappe?.boot?.whats_new_available ?? false,
     hasUnseenRelease: window.frappe?.boot?.whats_new_unseen ?? false,
+    canViewFinancials: false,
   },
   actions: {
     logout: () => Promise.resolve(),

@@ -76,6 +76,9 @@ export const UserProvider: FC<PropsWithChildren> = ({ children }) => {
 
   const isAppDataLoading = isAuthenticated && !appData && !appDataError;
 
+  const canViewFinancials: UserContextProps["state"]["canViewFinancials"] =
+    appData?.message?.can_view_financials ?? false;
+
   const roles: UserContextProps["state"]["roles"] =
     appData?.message?.roles ?? window.frappe?.boot?.user?.roles ?? [];
 
@@ -185,6 +188,7 @@ export const UserProvider: FC<PropsWithChildren> = ({ children }) => {
           hasBuField,
           hasIndustryField,
           backdateRestrictedBefore,
+          canViewFinancials,
           currentUser,
           hasReleaseNotes,
           hasUnseenRelease,
