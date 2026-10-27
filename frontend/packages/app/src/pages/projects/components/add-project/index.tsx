@@ -43,7 +43,7 @@ function AddProjectModal({
   const form = useForm({
     defaultValues: {
       projectName: prefill?.projectName ?? "",
-      phase: prefill?.phase ?? "Delivery Prep",
+      phase: prefill?.phase ?? "Not Started",
       company: prefill?.company ?? "",
       customer: prefill?.customer ?? "",
     },

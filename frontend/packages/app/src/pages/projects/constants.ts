@@ -40,13 +40,19 @@ export const DEFAULT_PROJECT_VIEWS: View[] = [
   },
 ];
 
+/** Mirrors the Project Status options, which Project Phase is kept equal to. */
 export const PHASES = [
-  "delivery-prep",
-  "kick-off",
-  "discovery",
+  "not-started",
+  "open",
+  "requirement-gathering",
+  "design",
   "development",
-  "launch",
-  "close-out",
+  "uat",
+  "vapt",
+  "hold",
+  "completed",
+  "maintenance",
+  "cancelled",
 ] as const;
 
 export const RAG_STATUS = ["red", "amber", "green"] as const;

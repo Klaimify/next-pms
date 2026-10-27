@@ -137,11 +137,17 @@ export function safeExternalUrl(value?: string | null): string | undefined {
   }
 }
 
+const UPPERCASE_WORDS = new Set(["uat", "vapt"]);
+
 export function kebabToTitleCase(value: string): string {
   return value
     .split("-")
     .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .map((word) =>
+      UPPERCASE_WORDS.has(word.toLowerCase())
+        ? word.toUpperCase()
+        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+    )
     .join(" ");
 }
 
