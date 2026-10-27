@@ -4,12 +4,17 @@
 import { useFrappeGetDocList } from "frappe-react-sdk";
 
 const DEFAULT_PHASES = [
-  "Delivery Prep",
-  "Kick Off",
-  "Discovery",
+  "Not Started",
+  "Open",
+  "Requirement Gathering",
+  "Design",
   "Development",
-  "Launch",
-  "Close Out",
+  "UAT",
+  "VAPT",
+  "Hold",
+  "Completed",
+  "Maintenance",
+  "Cancelled",
 ];
 
 export const useProjectPhase = () => {
