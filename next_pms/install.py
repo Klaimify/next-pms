@@ -378,7 +378,9 @@ CUSTOM_DOCPERMS: tuple[tuple[str, str, int, int, tuple[str, ...]], ...] = (
     ("Project", "Timesheet User", 0, 0, ("read",)),
     ("Project", "Timesheet User", 1, 0, ("read", "export")),
     ("Project", "Timesheet User", 2, 0, ("read", "export")),
+    ("Project", "Project Task User", 0, 0, ("select", "read")),
     ("Task", "Employee", 0, 0, ("read", "write", "create")),
+    ("Task", "Project Task User", 0, 0, ("select", "read", "write", "create")),
     (
         "Task",
         "Projects Manager",
@@ -574,7 +576,7 @@ def create_docs(records: list):
 def create_roles():
     import frappe
 
-    roles = ["Timesheet Manager", "Timesheet User"]
+    roles = ["Timesheet Manager", "Timesheet User", "Project Task User"]
 
     for role in roles:
         role = frappe.get_doc({"doctype": "Role", "role_name": role, "is_custom": 1})

@@ -18,6 +18,7 @@ from next_pms.next_projects.api.constant import (
     KANBAN_VIEW_FIELDS,
     LIST_VIEW_FIELDS,
     MONETARY_SORT_FIELDS,
+    NON_FINANCIAL_ROLES,
     SORT_KEY_FIELDS,
     TASK_TRACKING_COMPLETED_STATUS,
     TASK_TRACKING_OPEN_STATUSES,
@@ -35,6 +36,7 @@ from next_pms.timesheet.api import get_count
 from next_pms.utils.employee import (
     get_employee_salary,
 )
+from next_pms.utils.permissions import can_view_financials
 
 
 # Calculated field helpers
@@ -523,6 +525,26 @@ def enrich_project_with_calculated_fields(
     return enriched
 
 
+FINANCIAL_LIST_KEYS = (
+    "burn_rate_per_week",
+    "cost_burn",
+    "total_budget",
+    "profit_margin",
+    "lifetime_value_to_date",
+    "billing_type",
+)
+
+
+def _strip_financials(project: dict) -> dict:
+    """Drop the financial keys from an enriched project for users without financial access."""
+    return {key: value for key, value in project.items() if key not in FINANCIAL_LIST_KEYS}
+
+
+def _kanban_card(project: dict, show_financials: bool) -> dict:
+    card = enrich_project_for_kanban(project)
+    return card if show_financials else _strip_financials(card)
+
+
 def enrich_project_for_kanban(project: dict) -> dict:
     """Add minimal fields to a project dict for kanban view (no heavy calculations)."""
     return {
@@ -611,7 +633,8 @@ def get_projects_view(
         For kanban view: {"columns": [...], "data": {...}, "total_count": int}
     """
     # Permission check
-    only_for(ALLOWED_ROLES, message=True)
+    only_for([*ALLOWED_ROLES, *NON_FINANCIAL_ROLES], message=True)
+    show_financials = can_view_financials()
 
     # Parse filters if string
     if isinstance(filters, str):
@@ -629,7 +652,7 @@ def get_projects_view(
     fields = LIST_VIEW_FIELDS if view == "list" else KANBAN_VIEW_FIELDS
 
     sort_field, sort_direction = parse_order_by(order_by)
-    use_computed_sort = view == "list" and sort_field in COMPUTED_SORT_FIELDS
+    use_computed_sort = view == "list" and show_financials and sort_field in COMPUTED_SORT_FIELDS
     if sort_field in COMPUTED_SORT_FIELDS and not use_computed_sort:
         order_by = "modified desc"
 
@@ -691,7 +714,9 @@ def get_projects_view(
             for p in projects
         ]
 
-        if currency:
+        if not show_financials:
+            enriched_projects = [_strip_financials(p) for p in enriched_projects]
+        elif currency:
             _apply_currency_conversion(enriched_projects, currency)
 
         return {
@@ -710,12 +735,12 @@ def get_projects_view(
         for project in projects:
             phase = project.get("custom_project_phase")
             if phase and phase in phase_groups:
-                phase_groups[phase].append(enrich_project_for_kanban(project))
+                phase_groups[phase].append(_kanban_card(project, show_financials))
             elif phase:
                 # Phase exists but not in predefined phases - create a group for it
                 if phase not in phase_groups:
                     phase_groups[phase] = []
-                phase_groups[phase].append(enrich_project_for_kanban(project))
+                phase_groups[phase].append(_kanban_card(project, show_financials))
 
         return {
             "columns": phases,
@@ -1129,6 +1154,8 @@ def get_project_tracking(project: str):
             valid_from fall back to the flat-rate values when blank.
     """
     only_for(ALLOWED_ROLES, message=True)
+    if not can_view_financials():
+        frappe.throw(frappe._("You are not permitted to view project financials"), frappe.PermissionError)
 
     if not project:
         frappe.throw(frappe._("Project is required"), frappe.MandatoryError)
@@ -1308,8 +1335,12 @@ def get_project_sidebar(project: str):
         customers     - contacts from custom_customer_contacts
         billing_team  - billing team members (name, employee_id, user_id);
                         empty unless billing type is Time and Material
+
+    burn and billing_team are left out, and members carry no hourly_rate, for users
+    without read access to the financial permlevel of Project.
     """
-    only_for(ALLOWED_ROLES, message=True)
+    only_for([*ALLOWED_ROLES, *NON_FINANCIAL_ROLES], message=True)
+    show_financials = can_view_financials()
 
     if not project:
         frappe.throw(frappe._("Project is required"), frappe.MandatoryError)
@@ -1321,12 +1352,7 @@ def get_project_sidebar(project: str):
 
     is_retainer = project_doc.get("custom_billing_type") == "Retainer"
 
-    total_budget = get_total_budget(project_doc)
-    cost_accrued = get_budget_burn_accrued(project_doc)
-    forecast = get_project_forecast(project, project_doc)
-    target_cost = flt(project_doc.custom_target_cost)
-
-    return {
+    sidebar = {
         "summary": project_doc.get("custom_short_summary"),
         "details": {
             "project_name": project_doc.project_name,
@@ -1341,13 +1367,6 @@ def get_project_sidebar(project: str):
             "website": project_doc.get("custom_website"),
             "github": _get_github_url(project_doc),
             "opportunity": _get_opportunity_link(project_doc),
-        },
-        "burn": {
-            "total_budget": total_budget,
-            "cost_accrued": cost_accrued,
-            "cost_forecasted": forecast["cost"],
-            "budget_forecasted": forecast["budget"],
-            "target_cost": target_cost,
         },
         "progress": {
             "actual_time": flt(project_doc.actual_time),
@@ -1364,9 +1383,6 @@ def get_project_sidebar(project: str):
             project_doc.get("custom_engineering_manager"),
         ),
         "customers": _get_project_customers(project_doc),
-        "billing_team": (
-            _get_project_billing_team(project) if project_doc.get("custom_billing_type") == "Time and Material" else []
-        ),
         "is_shared_with_everyone": bool(
             frappe.db.exists(
                 "DocShare",
@@ -1374,3 +1390,21 @@ def get_project_sidebar(project: str):
             )
         ),
     }
+
+    if not show_financials:
+        for member in sidebar["members"]:
+            member.pop("hourly_rate", None)
+        return sidebar
+
+    forecast = get_project_forecast(project, project_doc)
+    sidebar["burn"] = {
+        "total_budget": get_total_budget(project_doc),
+        "cost_accrued": get_budget_burn_accrued(project_doc),
+        "cost_forecasted": forecast["cost"],
+        "budget_forecasted": forecast["budget"],
+        "target_cost": flt(project_doc.custom_target_cost),
+    }
+    sidebar["billing_team"] = (
+        _get_project_billing_team(project) if project_doc.get("custom_billing_type") == "Time and Material" else []
+    )
+    return sidebar
