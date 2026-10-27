@@ -27,6 +27,7 @@ def after_install():
     setup_project_permissions_for_managers()
     setup_time_report_frequency()
     setup_custom_docperms()
+    restrict_project_cost_fields()
 
 
 def setup_timesheet_rejection_reason_field():
@@ -348,6 +349,26 @@ def setup_project_permissions_for_managers():
                 add_permission(doctype, role, permlevel)
             for perm_key, perm_val in (base_permissions if permlevel == 0 else field_permissions).items():
                 update_permission_property(doctype, role, permlevel, perm_key, perm_val)
+
+
+PROJECT_COST_FIELDS = (
+    "estimated_costing",
+    "total_costing_amount",
+    "total_purchase_cost",
+    "total_sales_amount",
+    "total_billable_amount",
+    "gross_margin",
+    "per_gross_margin",
+)
+
+
+def restrict_project_cost_fields() -> None:
+    """Move the standard Project costing and billing fields to the financial permlevel (2), so
+    roles without read access to it cannot see them on the form or through the REST API."""
+    from frappe.custom.doctype.property_setter.property_setter import make_property_setter
+
+    for fieldname in PROJECT_COST_FIELDS:
+        make_property_setter("Project", fieldname, "permlevel", 2, "Int", validate_fields_for_doctype=False)
 
 
 CUSTOM_DOCPERMS: tuple[tuple[str, str, int, int, tuple[str, ...]], ...] = (
