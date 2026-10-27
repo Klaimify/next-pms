@@ -2,6 +2,7 @@ import frappe
 from erpnext import get_default_company
 from frappe.tests import IntegrationTestCase
 
+from next_pms.install import PROJECT_COST_FIELDS
 from next_pms.next_projects.api.project import (
     FINANCIAL_LIST_KEYS,
     get_project_sidebar,
@@ -25,13 +26,16 @@ class TestProjectTaskUser(IntegrationTestCase):
         for role in ("Project Task User", "Projects Manager"):
             if not frappe.db.exists("Role", role):
                 frappe.get_doc({"doctype": "Role", "role_name": role}).insert(ignore_permissions=True)
-        from next_pms.install import setup_custom_docperms
+        from next_pms.install import restrict_project_cost_fields, setup_custom_docperms
 
         setup_custom_docperms()
+        restrict_project_cost_fields()
 
         cls.task_user = cls.make_user(TASK_USER, "Project Task User")
         cls.manager_user = cls.make_user(MANAGER_USER, "Projects Manager")
         cls.project = cls.make_project()
+        for fieldname in PROJECT_COST_FIELDS:
+            frappe.db.set_value("Project", cls.project, fieldname, 1000)
         for user in (cls.task_user, cls.manager_user):
             frappe.share.add("Project", cls.project, user, read=1, write=1, flags={"ignore_share_permission": True})
         frappe.clear_cache()
@@ -80,6 +84,20 @@ class TestProjectTaskUser(IntegrationTestCase):
     def test_financial_access_follows_the_role(self):
         self.assertFalse(can_view_financials(self.task_user))
         self.assertTrue(can_view_financials(self.manager_user))
+
+    def test_project_doc_hides_cost_fields_from_task_user(self):
+        frappe.set_user(self.task_user)
+        doc = frappe.client.get("Project", self.project)
+
+        for fieldname in PROJECT_COST_FIELDS:
+            self.assertFalse(doc.get(fieldname), fieldname)
+
+    def test_project_doc_keeps_cost_fields_for_manager(self):
+        frappe.set_user(self.manager_user)
+        doc = frappe.client.get("Project", self.project)
+
+        for fieldname in PROJECT_COST_FIELDS:
+            self.assertEqual(doc.get(fieldname), 1000, fieldname)
 
     def test_list_view_has_no_financial_keys(self):
         frappe.set_user(self.task_user)
