@@ -79,7 +79,7 @@ export const routeConfig: Record<
   },
   "timesheet-team": {
     Component: ReactLazyPreload(() => import("@/pages/timesheet/team")),
-    allowedRoles: ROLE_ACCESS.reviewTimesheets,
+    allowedRoles: ROLE_ACCESS.reviewTeamTimesheets,
     title: "Team Timesheet",
   },
   "timesheet-project": {

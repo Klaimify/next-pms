@@ -59,3 +59,4 @@ next_pms.next_pms.patches.backfill_risk_mitigated_on
 next_pms.timesheet.patches.setup_timesheet_rejected_on_field
 next_pms.next_projects.patches.create_project_task_user_role
 next_pms.next_projects.patches.restrict_project_cost_fields
+next_pms.next_projects.patches.grant_project_task_user_allocation_access

@@ -20,9 +20,11 @@ export const TimesheetBreadcrumbs = () => {
     roles: state.roles,
   }));
 
-  const hasRoleAccess = hasAnyRole(roles, ROLE_ACCESS.reviewTimesheets);
+  const canReviewTeam = hasAnyRole(roles, ROLE_ACCESS.reviewTeamTimesheets);
+  const canReviewProjects = hasAnyRole(roles, ROLE_ACCESS.reviewTimesheets);
+  const hasRoleAccess = canReviewTeam || canReviewProjects;
 
-  const timesheetViews = [
+  const allTimesheetViews = [
     {
       key: "personal",
       label: "Personal",
@@ -45,13 +47,19 @@ export const TimesheetBreadcrumbs = () => {
     },
   ] as const;
 
+  const timesheetViews = allTimesheetViews.filter(
+    (view) =>
+      view.key === "personal" ||
+      (view.key === "team" ? canReviewTeam : canReviewProjects),
+  );
+
   const selectedKey = pathname.includes("team")
     ? "team"
     : pathname.includes("project")
       ? "project"
       : "personal";
 
-  const activeView = timesheetViews.find((v) => v.key === selectedKey)!;
+  const activeView = allTimesheetViews.find((v) => v.key === selectedKey)!;
 
   return (
     <Breadcrumbs

@@ -136,6 +136,14 @@ def filter_employees(
         else:
             filters["reports_to"] = reports_to
 
+    if frappe.flags.get("team_review_scoped"):
+        # A reviewer limited to direct reports never sees anyone else, whatever reports_to asks for.
+        manager = get_value("Employee", {"user_id": frappe.session.user})
+        if not manager:
+            return [], 0
+        filters["reports_to"] = manager
+        ignore_permissions = True
+
     if isinstance(department, str):
         department = json.loads(department)
 
