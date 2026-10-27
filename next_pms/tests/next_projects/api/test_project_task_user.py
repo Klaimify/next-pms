@@ -9,6 +9,7 @@ from next_pms.next_projects.api.project import (
     get_project_tracking,
     get_projects_view,
 )
+from next_pms.timesheet.api.app import get_data
 from next_pms.utils.permissions import can_view_financials
 
 TASK_USER = "project.taskuser@example.com"
@@ -84,6 +85,13 @@ class TestProjectTaskUser(IntegrationTestCase):
     def test_financial_access_follows_the_role(self):
         self.assertFalse(can_view_financials(self.task_user))
         self.assertTrue(can_view_financials(self.manager_user))
+
+    def test_app_data_reports_financial_access(self):
+        frappe.set_user(self.task_user)
+        self.assertFalse(get_data()["can_view_financials"])
+
+        frappe.set_user(self.manager_user)
+        self.assertTrue(get_data()["can_view_financials"])
 
     def test_project_doc_hides_cost_fields_from_task_user(self):
         frappe.set_user(self.task_user)

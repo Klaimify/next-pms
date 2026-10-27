@@ -11,6 +11,7 @@ import { AgentAlt, Apps, Calendar, Code } from "@rtcamp/frappe-ui-react/icons";
  */
 import { ROUTES } from "@/lib/constant";
 import { formatProjectDate, toKebabCase } from "@/lib/utils";
+import { useUser } from "@/providers/user";
 
 import { KANBAN_CARD_TOOLTIP, PROJECT_HEALTH_TOOLTIP } from "../help";
 import { Dot } from "../list/cells/dot";
@@ -20,6 +21,7 @@ import type { Employee, KanbanProjectItem } from "./types";
 
 export function ProjectCard({ project }: { project: KanbanProjectItem }) {
   const navigate = useNavigate();
+  const canViewFinancials = useUser((s) => s.state.canViewFinancials);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
 
   const rag = toKebabCase(project.rag_status) as RagStatus;
@@ -81,12 +83,14 @@ export function ProjectCard({ project }: { project: KanbanProjectItem }) {
         >
           <EmployeeInline employee={project.engineering_manager} />
         </Row>
-        <Row
-          icon={<Apps className="size-4 shrink-0 text-ink-gray-6" />}
-          tooltip={KANBAN_CARD_TOOLTIP.billingType}
-        >
-          {project.billing_type ?? "N/A"}
-        </Row>
+        {canViewFinancials && (
+          <Row
+            icon={<Apps className="size-4 shrink-0 text-ink-gray-6" />}
+            tooltip={KANBAN_CARD_TOOLTIP.billingType}
+          >
+            {project.billing_type ?? "N/A"}
+          </Row>
+        )}
       </div>
     </div>
   );

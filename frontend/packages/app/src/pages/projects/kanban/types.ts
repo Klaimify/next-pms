@@ -19,7 +19,7 @@ export type KanbanProjectItem = {
   end_date: string | null;
   project_manager: Employee | null;
   engineering_manager: Employee | null;
-  billing_type: string;
+  billing_type?: string;
 };
 
 export type ResponseProjectKanban = {

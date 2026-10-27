@@ -51,6 +51,9 @@ export interface UserContextProps {
      * server-side (already accounts for holidays/leave/manager-vs-employee threshold).
      * `null` means not yet known (e.g. still loading) or no employee record. */
     backdateRestrictedBefore: string | null;
+    /** Whether the user can read project financial data (costs, budgets, rates).
+     * `false` until the app data has loaded. */
+    canViewFinancials: boolean;
   };
   actions: {
     /** Logs out the current user and clears the active session. */
@@ -80,6 +83,7 @@ export const UserContext = createContext<UserContextProps>({
     hasBuField: window.frappe?.boot?.has_business_unit ?? false,
     hasIndustryField: window.frappe?.boot?.has_industry ?? false,
     backdateRestrictedBefore: null,
+    canViewFinancials: false,
   },
   actions: {
     logout: () => Promise.resolve(),

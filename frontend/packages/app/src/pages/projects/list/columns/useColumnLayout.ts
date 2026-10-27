@@ -9,8 +9,10 @@ import { move } from "@dnd-kit/helpers";
  * Internal dependencies.
  */
 import { parseColumnKeys } from "@/lib/utils";
+import { useUser } from "@/providers/user";
 import {
   COLUMN_PARAM_KEYS,
+  FINANCIAL_COLUMN_KEYS,
   MAX_PINNED_COLUMNS,
   PROJECT_LIST_COLUMNS,
 } from "./constants";
@@ -66,6 +68,7 @@ function toLayoutParams(next: { order?: string[]; pinned?: string[] }) {
 export function useColumnLayout() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeView = useProjectViews((state) => state.state.activeView);
+  const canViewFinancials = useUser((s) => s.state.canViewFinancials);
 
   const savedOrder = useMemo(
     () => resolveOrder(parseKeys(activeView?.columns)),
@@ -93,8 +96,12 @@ export function useColumnLayout() {
       ...pinnedColumns,
       ...baseOrder.filter((key) => !pinned.has(key)),
     ];
-    return order.flatMap((key) => COLUMN_BY_KEY.get(key) ?? []);
-  }, [baseOrder, pinnedColumns]);
+    return order.flatMap((key) =>
+      !canViewFinancials && FINANCIAL_COLUMN_KEYS.has(key)
+        ? []
+        : (COLUMN_BY_KEY.get(key) ?? []),
+    );
+  }, [baseOrder, pinnedColumns, canViewFinancials]);
 
   /**
    * Writes the updated column layout (order and pinned columns) to the search parameters.

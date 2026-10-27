@@ -88,7 +88,8 @@ export type ProjectSidebar = {
     github: string | null;
     opportunity: { name: string; url: string } | null;
   };
-  burn: {
+  /** Left out for users without financial access. */
+  burn?: {
     total_budget: number;
     cost_accrued: number;
     cost_forecasted: number;
@@ -107,7 +108,7 @@ export type ProjectSidebar = {
     department: string | null;
     cell_number: string | null;
     company_email: string | null;
-    hourly_rate: number | null;
+    hourly_rate?: number | null;
     logged_hours?: number | null;
     currency: string | null;
     linkedin_url?: string | null;
@@ -123,7 +124,8 @@ export type ProjectSidebar = {
     phone: string | null;
     linkedin_url?: string | null;
   }>;
-  billing_team: Array<{
+  /** Left out for users without financial access. */
+  billing_team?: Array<{
     name: string | null;
     employee_id: string;
     user_id: string | null;
